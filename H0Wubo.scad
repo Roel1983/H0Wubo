@@ -32,6 +32,19 @@ shadow_cap_length         =  3.5;  // [1.0 : 0.1 : 5.0]
 // Overhang (mm)
 shadow_cap_overhang       =  2.0;  // [1.0 : 0.1 : 5.0]
 
+/* [Pole] */
+
+pole                      = true; 
+
+// Pole diameter (mm)
+pole_diameter             =  2.5;  // [1.0 : 0.1 : 5.0]
+
+// Pole thickness (%)
+pole_thickness            =  75;   // [5 : 5 : 100]
+
+// Pole length (mm)
+pole_length               = 60.0;  // [10.0 : 0.5 : 150.0]
+
 /* [Hidden] */
 
 VEC_X = [1, 0, 0];
@@ -50,6 +63,10 @@ module Wubo(
     led_height                = mm(led_height),
     led_rim_thickness         = mm(led_rim_thickness),
     led_rim_height            = mm(led_rim_height),
+    pole                      = pole,
+    pole_diameter             = mm(pole_diameter),
+    pole_thickness            = mm(pole_thickness),
+    pole_length               = mm(pole_length),
     $fn                       = 64
 ) {
     led_rim_diameter = led_diameter + 2 * led_rim_thickness;
@@ -61,6 +78,8 @@ module Wubo(
         }
         lamp_postion() LedHole();
     }
+    if(pole) Pole();
+    
     if($preview) color("LightYellow", 0.5)lamp_postion() Led();
     
     module BackPlate() {
@@ -111,6 +130,33 @@ module Wubo(
             d = led_diameter,
             h = board_thickness + shadow_cap_length + BIAS
         );
+    }
+    
+    
+    module Pole() {
+        scale([1,1,pole_thickness / 100]) {
+            intersection() {
+                hull() {
+                    translate([0, lamp_distance * .75]) {
+                        sphere(d = pole_diameter);
+                    }
+                    translate([0, -pole_length]) {
+                        BIAS = 0.1;
+                        rotate(-90, VEC_X) {
+                            cylinder(d = pole_diameter, h = BIAS);
+                        }
+                    }
+                }
+                linear_extrude(pole_diameter) {
+                    translate([-pole_diameter/2, -pole_length]) {
+                        square([
+                            pole_diameter,
+                            pole_length + lamp_distance * .75 
+                            + pole_diameter]);
+                    }
+                }
+            }
+        }
     }
     
     module Led() {
